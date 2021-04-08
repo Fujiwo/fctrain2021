@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no">
+    <title>日時の表示 Ver.0.3 | FC</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <p id="time"></p>
+
+    <script type="text/javascript">
+        function showTime() {
+            let now     = new Date(); //  現在日時を得る
+            let hours   = now.getHours(); // 時を抜き出す
+            let minutes = now.getMinutes(); // 分を抜き出す
+            let seconds = now.getSeconds(); // 秒を抜き出す
+            let message = "現在時刻は、" + hours + "時" + minutes + "分" + seconds + "秒です。";
+            document.getElementById('time').innerHTML = message; // 'time' という id を持つ要素の中に表示する
+        }
+
+        setInterval(showTime, 1000); // 1000ミリ秒ごとに繰り返す
+    </script>
+</body>
+</html>

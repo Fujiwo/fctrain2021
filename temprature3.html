@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>摂氏と華氏の変換 Ver.0.3 | FC</title>
+    <style>
+        body { font-family: arial,sans-serif; }
+        h1 {
+            font-size: small;
+            padding: .75em 0;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>摂氏と華氏の変換 Ver.0.3</h1>
+
+    <div>
+        <table>
+            <tr>
+                <th><span>摂氏(Celsius) (℃)</span></th>
+                <td><input id="cTextBox" type="mumber" value="0.0" placeholder="摂氏(℃)" /></td>  
+                <td><button type="button" id="ctoFButton">摂氏 → 華氏</button></td>
+            </tr>
+            <tr>
+                <th><span>華氏(Fahrenheit) (℉)</span></th>
+                <td><input id="fTextBox" type="mumber" value="32.0" placeholder="華氏(℉)" /></td>  
+                <td><button type="button" id="ftoCButton">華氏 → 摂氏</button></td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+    <div>
+        <p>&copy; 2019 FUKUICOMPUTER Group.</p>
+    </div>
+
+    <script>
+        function ctoF(c) {
+            return c * 9.0 / 5.0 + 32.0;
+        }
+        
+        function ftoC(f) {
+            return (f - 32.0) * 5.0 / 9.0;
+        }
+
+        function getNumberTextBoxValue(textBoxId) {
+            let textBox = document.getElementById(textBoxId);
+            let value   = parseFloat(textBox.value);
+            setNumberTextBoxValue(textBoxId, value);
+            return value;
+        }
+
+        function setNumberTextBoxValue(textBoxId, value) {
+            let textBox = document.getElementById(textBoxId);
+            textBox.value = value.toFixed(1);
+        }
+
+        function onCtoF() {
+            let c = getNumberTextBoxValue('cTextBox');
+            setNumberTextBoxValue('fTextBox', ctoF(c));
+        }
+
+        function onFtoC() {
+            let f = getNumberTextBoxValue('fTextBox');
+            setNumberTextBoxValue('cTextBox', ftoC(f));
+        }
+
+        function initializeTextBoxes() {
+            let c = 0.0;
+            setNumberTextBoxValue('cTextBox', c);
+            setNumberTextBoxValue('fTextBox', (ctoF(c)));
+        }
+
+        function initializeHandlers() {
+            document.getElementById('cTextBox').onkeydown = function(e) {
+                if (e.keyCode === 13)
+                    onCtoF();
+            };
+            document.getElementById('fTextBox').onkeydown = function(e) {
+                if (e.keyCode === 13)
+                    onFtoC();
+            };
+
+            document.getElementById('ctoFButton').onclick = onCtoF;
+            document.getElementById('ftoCButton').onclick = onFtoC;
+        }
+
+        function main() {
+            initializeTextBoxes();
+            initializeHandlers ();
+        }
+
+        window.onload = main;
+    </script>
+</body>
+</html>

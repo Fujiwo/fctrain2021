@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="Author" content="Fukui Computer Group">
+    <meta name="Classification" content="摂氏と華氏の変換">
+    <meta name="Description" content="摂氏と華氏を変換します。また、摂氏と華氏の変換表を表示します。">
+    <meta name="keywords" content="摂氏,華氏,気温,温度,変換">
+    <title>摂氏と華氏の変換 Ver.0.8 | FC</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <style>
+        body { font-family: arial,sans-serif; }
+        h1 {
+            font-size: small;
+            padding: .75em 0;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+        }
+        .comment {
+            font-size: smaller;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+    <p class="comment">
+        <script type="text/javascript">
+            document.write("Last updated on " + document.lastModified + ".")
+        </script>
+    </p>
+    </div>
+    <hr>
+
+    <h1>摂氏と華氏の変換 Ver.0.8</h1>
+
+    <figure class="figure">
+        <figucaption class="figure-caption">摂氏と華氏</figucaption>
+        <svg id="svg" class="whole" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" width="500" height="500"></svg>
+    </figure>
+
+    <div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">摂氏と華氏の変換器</a></li>
+        <li><a href="#tabs-2">摂氏と華氏の変換表</a></li>
+    </ul>
+    <div id="tabs-1">
+        <div class="form-group table-responsive">
+            <table class="table">
+                <tr>
+                    <th><span>摂氏(Celsius) (℃)</span></th>
+                    <td><input id="cTextBox" class="form-control" type="mumber" value="0.0" placeholder="摂氏(℃)" /></td>  
+                    <td><button type="button" class="btn btn-primary" id="ctoFButton">摂氏 → 華氏</button></td>
+                </tr>
+                <tr>
+                    <th><span>華氏(Fahrenheit) (℉)</span></th>
+                    <td><input id="fTextBox" class="form-control" type="mumber" value="32.0" placeholder="華氏(℉)" /></td>  
+                    <td><button type="button" class="btn btn-primary" id="ftoCButton">華氏 → 摂氏</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="tabs-2">
+        <div class="form-group table-responsive"">
+            <table class="table">
+                <tr>
+                    <th><span>摂氏(Celsius)の最低値(℃)</span></th>
+                    <td><input id="cMinTextBox" class="form-control" type="mumber" value="-50.0" placeholder="摂氏の最低値(℃)" /></td>  
+                </tr>
+                <tr>
+                    <th><span>摂氏(Celsius)の最高値(℃)</span></th>
+                    <td><input id="cMaxTextBox" class="form-control" type="mumber" value="50.0" placeholder="摂氏の最高値(℃)" /></td>  
+                </tr>
+                <tr>
+                    <th><span>間隔(°)</span></th>
+                    <td><input id="cStepTextBox" class="form-control" type="mumber" value="10.0" placeholder="間隔(°)" /></td>  
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <button type="button" class="btn btn-primary" id="degreeTableButton">変換表の表示</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="degreeTable" class="table-responsive"></div>
+    </div>
+    </div>
+    <hr>
+    <div>
+        <p class="comment">&copy; 2019 FUKUICOMPUTER Group.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script>
+        function ctoF(c) {
+            return c * 9.0 / 5.0 + 32.0;
+        }
+        
+        function ftoC(f) {
+            return (f - 32.0) * 5.0 / 9.0;
+        }
+
+        function getDegreeArray(cMin, cMax, cStep) {
+            var degreeArray = [];
+            for (var c = cMin; c <= cMax; c += cStep)
+                degreeArray.push({c: c, f: ctoF(c)});
+            return degreeArray;
+        }
+
+        function plusPoints(point1, point2) {
+            return { x: point1.x + point2.x, y: point1.y + point2.y };
+        }
+
+        function minusPoints(point1, point2) {
+            return { x: point1.x - point2.x, y: point1.y - point2.y };
+        }
+
+        function multiplyPoints(point, size) {
+            return { x: point.x * size.x, y: point.y * size.y };
+        }
+
+        function devidePoints(point, size) {
+            return { x: point.x / size.x, y: point.y / size.y };
+        }
+
+        function toDevicePoint(logicalPoint, logicalArea) {
+            let deviceSize = 500;
+            let deviceArea = { topLeft: { x: 0, y: 0}, size: { x: deviceSize, y: deviceSize } };
+            
+            var devicePoint = minusPoints(logicalPoint, logicalArea.topLeft);
+            devicePoint = multiplyPoints(devicePoint, deviceArea.size);
+            devicePoint = devidePoints(devicePoint, logicalArea.size);
+            devicePoint = plusPoints(devicePoint, deviceArea.topLeft);
+            return devicePoint;
+        }
+        
+        function createLine(line, lineColor, strokeWidth, strokeDasharray) {
+            let figure = document.createElementNS('http://www.w3.org/2000/svg','line');
+            figure.setAttribute('x1', line.start.x);
+            figure.setAttribute('y1', line.start.y);
+            figure.setAttribute('x2', line.end.x);
+            figure.setAttribute('y2', line.end.y);
+            figure.setAttribute('stroke', lineColor);
+            figure.setAttribute('stroke-width', strokeWidth);
+            if (strokeDasharray > 0)
+                figure.setAttribute('stroke-dasharray', strokeDasharray);
+            return figure;
+        }
+
+        function createText(position, fontSize, text) {
+            let figure = document.createElementNS('http://www.w3.org/2000/svg','text');
+            figure.setAttribute('x', position.x);
+            figure.setAttribute('y', position.y);
+            figure.setAttribute('font-family', 'Verdana');
+            figure.setAttribute('font-size', fontSize);
+            figure.innerHTML = text;
+            return figure;
+        }
+
+        function drawGraph(cMin, cMax, cStep) {
+            let degreeArray = getDegreeArray(cMin, cMax, cStep);
+
+            var minimum = { c:  10000, f:  10000 };
+            var maximum = { c: -10000, f: -10000 };
+
+            for (var index = 0; index < degreeArray.length; index++) {
+                if (degreeArray[index].c < minimum.c)
+                    minimum.c = degreeArray[index].c;
+                else if (degreeArray[index].c > maximum.c)
+                    maximum.c = degreeArray[index].c;
+                if (degreeArray[index].f < minimum.f)
+                    minimum.f = degreeArray[index].f;
+                else if (degreeArray[index].f > maximum.c)
+                    maximum.f = degreeArray[index].f;
+            }
+            console.log('minimum: c: ' + minimum.c + ', f: ' + minimum.f);
+            console.log('maximum: c: ' + maximum.c + ', f: ' + maximum.f);
+
+            let base = 20;
+            minimum.c = Math.floor(minimum.c / base) * base - base;
+            minimum.f = Math.floor(minimum.f / base) * base - base;
+            maximum.c = Math.floor(maximum.c / base) * base + base;
+            maximum.f = Math.floor(maximum.f / base) * base + base;
+            console.log('minimum: c: ' + minimum.c + ', f: ' + minimum.f);
+            console.log('maximum: c: ' + maximum.c + ', f: ' + maximum.f);
+
+            let margin = base;
+            var logicalArea = { topLeft: { x: minimum.c - margin, y: minimum.f - margin }, size: { x: maximum.c - minimum.c + margin * 2, y: maximum.f - minimum.f + margin * 2 } };
+            console.log('logicalArea: topLeft: x: ' + logicalArea.topLeft.x + ', y: ' + logicalArea.topLeft.y + ', size: x: ' + logicalArea.size.x + ', y: ' + logicalArea.size.y);
+            //logicalArea = { topLeft: { x: logicalArea.topLeft.x, y: -logicalArea.topLeft.y }, size: { x: logicalArea.size.x, y: -logicalArea.size.y } };
+
+            let svg = document.getElementById('svg');
+            svg.innerHTML = '';
+
+            let strokeDasharray = 2;
+            let fontSize = 10;
+            var lineColor = 'black';
+            var strokeWidth = 1;
+           
+            var text = createText(toDevicePoint({x: minimum.c - base, y: maximum.f + fontSize}, logicalArea), fontSize, '摂氏(℃)');
+                svg.appendChild(text);
+            for (var x = minimum.c; x <= maximum.c; x += base) {
+                let startY = minimum.f;
+                let endY   = maximum.f;
+                var start  = {x: x, y: startY };
+                var end    = {x: x, y: endY   };
+                start      = toDevicePoint(start, logicalArea);
+                end        = toDevicePoint(end  , logicalArea);
+
+                let line = createLine({start: start, end: end}, lineColor, strokeWidth, strokeDasharray);
+                svg.appendChild(line);
+                let text = createText(plusPoints(end, {x: -fontSize, y: fontSize}) , fontSize, String(x));
+                svg.appendChild(text);
+            }
+
+            text = createText(toDevicePoint({x: maximum.c + fontSize, y: minimum.f }, logicalArea), fontSize, '華氏(℉)');
+                svg.appendChild(text);
+            for (var y = minimum.f; y <= maximum.f; y += base) {
+                let startX = minimum.c;
+                let endX   = maximum.c;
+                var start  = {x: startX, y: y };
+                var end    = {x: endX  , y: y };
+                start      = toDevicePoint(start, logicalArea);
+                end        = toDevicePoint(end  , logicalArea);
+
+                let line = createLine({start: start, end: end}, lineColor, strokeWidth, strokeDasharray);
+                svg.appendChild(line);
+                let text = createText(plusPoints(end, {x: fontSize, y: fontSize}) , fontSize, String(y));
+                svg.appendChild(text);
+            }
+
+            var lineColor = 'blue';
+            var strokeWidth = 3;
+
+            if (degreeArray.length > 0) {
+                var start = toDevicePoint({x: degreeArray[0].c, y: degreeArray[0].f}, logicalArea);
+                for (var index = 1; index < degreeArray.length; index++) {
+                    var end = toDevicePoint({x: degreeArray[index].c, y: degreeArray[index].f}, logicalArea);
+                    let line = createLine({start: start, end: end}, lineColor, strokeWidth, 0);
+                    start = end;
+                    svg.appendChild(line);
+                }
+            }
+        }
+
+
+        function getNumberTextBoxValue(textBoxId) {
+            let value = parseFloat($('#' + textBoxId).val());
+            setNumberTextBoxValue(textBoxId, value);
+            return value;
+        }
+
+        function setNumberTextBoxValue(textBoxId, value) {
+            $('#' + textBoxId).val(value.toFixed(1));
+        }
+
+        function createDegreeTable(cMin, cMax, cStep) {
+            let degreeArray = getDegreeArray(cMin, cMax, cStep);
+            if (degreeArray.length == 0)
+                return '';
+
+            var html = '<table class="table table-striped">';
+            html += '<tr><th>摂氏(℃)</th><th>華氏(℉)</th></tr>';
+            for (var index = 0; index < degreeArray.length; index++)
+                html += '<tr><td><span class="number">' + degreeArray[index].c.toFixed(1) + '℃</span></td><td><span class="number">' + degreeArray[index].f.toFixed(1) + '℉</span></td><tr>';
+            html += '</table>';
+            return html;
+        }
+
+        function onCtoF() {
+            let c = getNumberTextBoxValue('cTextBox');
+            setNumberTextBoxValue('fTextBox', ctoF(c));
+        }
+
+        function onFtoC() {
+            let f = getNumberTextBoxValue('fTextBox');
+            setNumberTextBoxValue('cTextBox', ftoC(f));
+        }
+
+        function onDegreeTable() {
+            let cMin  = getNumberTextBoxValue('cMinTextBox' );
+            let cMax  = getNumberTextBoxValue('cMaxTextBox' );
+            let cStep = getNumberTextBoxValue('cStepTextBox');
+
+            var table = createDegreeTable(cMin, cMax, cStep);
+            $('#degreeTable').html(table);
+
+            drawGraph(cMin, cMax, cStep);
+        }
+
+        function initializeTabs() {
+            $(function() {
+                $("#tabs").tabs();
+            });
+        }
+
+        function initializeTextBoxes() {
+            let c = 0.0;
+            setNumberTextBoxValue('cTextBox', c);
+            setNumberTextBoxValue('fTextBox', (ctoF(c)));
+
+            setNumberTextBoxValue('cMinTextBox' , -50.0);
+            setNumberTextBoxValue('cMaxTextBox' ,  50.0);
+            setNumberTextBoxValue('cStepTextBox',  10.0);
+        }
+
+        function initializeHandlers() {
+            $('#cTextBox').on('keydown', function(e) {
+                if (e.keyCode === 13)
+                    onCtoF();
+            });
+            $('#fTextBox').on('keydown', function(e) {
+                if(e.keyCode === 13)
+                    onFtoC();
+            });
+
+            $('#ctoFButton'       ).click(onCtoF       );
+            $('#ftoCButton'       ).click(onFtoC       );
+            $('#degreeTableButton').click(onDegreeTable);
+        }
+
+        function main() {
+            initializeTabs     ();
+            initializeTextBoxes();
+            onDegreeTable      ();
+            initializeHandlers ();
+        }
+
+        $(document).ready(main);
+    </script>
+</body>
+</html>
